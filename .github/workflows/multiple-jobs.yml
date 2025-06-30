@@ -1,0 +1,59 @@
+name: Generate multiple Jobs
+
+on: push
+
+#un pipeline de CI/CD con 3 jobs
+jobs:
+  build_job_1:
+    #cada maquina para cada job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Cowsay Program
+        run: sudo apte-get install cowsay -y
+
+      - name: Execute Cowsay CMD
+        run: cowsay -f dragon "Run for cover, I am a DRADON....RAWR" >> dragon.txt
+
+      # - name: Sleep for 30 seconds
+      #   run: sleep 30
+      - name: Upload Dragon Textr file
+        #esta acion lo esotoy descargado de github marketplace
+        uses: actions/upload-artifact@v3
+        with:
+          name: dragon-text-file
+          path: dragon.txt
+
+  test_job_2:
+    #vamos usar needs syntax por que queremos que se ejecute secunecialmente como debe ser
+    needs: build_job_1
+    runs-on: ubuntu-latest
+    steps:
+      # - name: Sleep for 10 seconds
+      #   run: sleep
+      - name: Download Dragon Text file
+        #esta acion lo esotoy descargado de github marketplace
+        uses: actions/download-artifact@v3
+        with:
+          name: dragon-text-file
+          # path: dragon.txt quito esto por que solo puedo dar el nombre del archivo nada mas
+
+      - name: Test file exists
+        run: grep -i "dragon" dragon.txt
+
+  deploy_job_3:
+    # se puede tener multiples jobs que dependan para agregar ex [test_job_2, test_job_1]
+    needs: [test_job_2]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Dragon Text file
+        #esta acion lo esotoy descargado de github marketplace
+        uses: actions/download-artifact@v3
+        with:
+          name: dragon-text-file
+          # path: dragon.txt quito esto por que solo puedo dar el nombre del archivo nada mas
+      - name: Read File
+        run: cat dragon.txt
+
+      - name: Deploy
+        run: echo Deploying
+# al ser de diferentes maquinas no se comparten los archivos que se crean por lo tanto
